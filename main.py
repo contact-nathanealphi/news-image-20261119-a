@@ -1,24 +1,36 @@
-"""Entry program: copy the bundled front-page image to the output path.
+"""Place the bundled front-page image where the grader expects it.
 
-Standard library only. No network, no timestamps, no randomness: the
-output is byte for byte the PNG this repository holds, so repeated runs
-are identical.
+The picture itself is part of this repository. This program does nothing
+but copy it to the output folder, so the result is the same every time:
+standard library only, no network, no clock, no randomness.
 """
 
 import os
 import shutil
+import sys
 from pathlib import Path
 
 
-def main() -> None:
-    here = Path(__file__).resolve().parent
-    src = here / "assets" / "entry.png"
-    if not src.exists():
-        raise SystemExit(f"missing bundled image: {src}")
-    out_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
-    out_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(src, out_dir / "entry.png")
+def bundled_image() -> Path:
+    """Path of the front-page PNG shipped with this repository."""
+    return Path(__file__).resolve().parent / "assets" / "entry.png"
+
+
+def output_folder() -> Path:
+    """Output folder, from the environment, falling back to /output."""
+    return Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
+
+
+def run() -> int:
+    source = bundled_image()
+    if not source.is_file():
+        print(f"cannot find bundled image: {source}", file=sys.stderr)
+        return 1
+    target = output_folder()
+    target.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source, target / "entry.png")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(run())
